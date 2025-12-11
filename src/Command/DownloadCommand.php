@@ -30,20 +30,23 @@ class DownloadCommand extends AbstractCommand
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $handler = $this->container->get('desarrolla2_download.handler.database_handler');
+        $handler->setLogger(new ConsoleLogger($output));
+
         if (!$input->getOption('avoid-database-download')) {
-            $handler = $this->container->get('desarrolla2_download.handler.database_handler');
-            $handler->setLogger(new ConsoleLogger($output));
             $output->writeln(' - downloading database');
             $handler->download();
-            if (!$input->getOption('avoid-database-load')) {
-                $output->writeln(' - loading database');
-                $handler->load();
-            }
 
             $output->writeln(' - deleting old databases');
             $totalDeleted = $handler->delete();
             $output->writeln(sprintf(' - done. %s databases deleted', $totalDeleted));
         }
+
+        if (!$input->getOption('avoid-database-load')) {
+            $output->writeln(' - loading database');
+            $handler->load();
+        }
+
         if (!$input->getOption('avoid-directories-download')) {
             $handler = $this->container->get('desarrolla2_download.handler.directory_handler');
             $handler->setLogger(new ConsoleLogger($output));
