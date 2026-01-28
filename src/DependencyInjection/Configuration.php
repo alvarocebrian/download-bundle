@@ -67,6 +67,7 @@ class Configuration implements ConfigurationInterface
                             ->treatNullLike([])
                             ->prototype('scalar')->end()
                         ->end()
+                    ->scalarNode('download_extra_options')->defaultNull()->end()
                     ->end()
                 ->end()
                 ->arrayNode('directories')

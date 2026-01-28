@@ -15,6 +15,7 @@ namespace Desarrolla2\DownloadBundle\Command;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -25,33 +26,34 @@ class DownloadCommand extends AbstractCommand
         $this->setName('downloader:download')
             ->addOption('avoid-database-download')
             ->addOption('avoid-database-load')
-            ->addOption('avoid-directories-download');
+            ->addOption('avoid-directories-download')
+            ->addOption('database-download-extra-options', mode: InputOption::VALUE_OPTIONAL);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $handler = $this->container->get('desarrolla2_download.handler.database_handler');
-        $handler->setLogger(new ConsoleLogger($output));
+        $databaseHandler = $this->container->get('desarrolla2_download.handler.database_handler');
+        $databaseHandler->setLogger(new ConsoleLogger($output));
 
         if (!$input->getOption('avoid-database-download')) {
             $output->writeln(' - downloading database');
-            $handler->download();
+            $databaseHandler->download($input->getOption('database-download-extra-options'));
 
             $output->writeln(' - deleting old databases');
-            $totalDeleted = $handler->delete();
+            $totalDeleted = $databaseHandler->delete();
             $output->writeln(sprintf(' - done. %s databases deleted', $totalDeleted));
         }
 
         if (!$input->getOption('avoid-database-load')) {
             $output->writeln(' - loading database');
-            $handler->load();
+            $databaseHandler->load();
         }
 
         if (!$input->getOption('avoid-directories-download')) {
-            $handler = $this->container->get('desarrolla2_download.handler.directory_handler');
-            $handler->setLogger(new ConsoleLogger($output));
+            $directoryHandler = $this->container->get('desarrolla2_download.handler.directory_handler');
+            $directoryHandler->setLogger(new ConsoleLogger($output));
             $output->writeln(' - downloading directories');
-            $handler->download();
+            $directoryHandler->download();
         }
 
         $output->writeln(' - done');

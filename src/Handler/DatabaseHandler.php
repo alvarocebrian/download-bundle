@@ -41,7 +41,8 @@ class DatabaseHandler extends AbstractHandler
         Database $local,
         string $directory,
         int $maxLocalDb,
-        array $onlyStructureTables = []
+        array $onlyStructureTables = [],
+        ?string $extraOptions = null
     ) {
         $this->user = $user;
         $this->host = $host;
@@ -50,6 +51,7 @@ class DatabaseHandler extends AbstractHandler
         $this->directory = $directory;
         $this->maxLocalDb = $maxLocalDb;
         $this->onlyStructureTables = $onlyStructureTables;
+        $this->downloadExtraOptions = $extraOptions;
     }
 
     public function clean()
@@ -59,17 +61,18 @@ class DatabaseHandler extends AbstractHandler
         );
     }
 
-    public function download()
+    public function download(?string $extraOptions = null)
     {
         $databaseFile = $this->getFileName();
         $databaseFileWithTime = $this->getFileNameWithDateTime();
         $temporalFile = $this->getTemporalFileName();
         $sql = sprintf(
-            'mysqldump -h%s -u%s -p\'%s\' --port %s --single-transaction --create-options --databases %s %s > %s',
+            'mysqldump -h%s -u%s -p\'%s\' --port %s --single-transaction --create-options %s --databases %s %s > %s',
             $this->remote->getHost(),
             $this->remote->getUser(),
             $this->remote->getPassword(),
             $this->remote->getPort(),
+            sprintf("%s %s", $this->downloadExtraOptions, $extraOptions),
             $this->remote->getName(),
             $this->getSkipTables(),
             $temporalFile
